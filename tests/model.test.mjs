@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {seed,totals,validate,parseAmount,decimal,newRecord} from '../docs/model.mjs';
+import test from 'node:test';import assert from 'node:assert/strict';import {seed,totals,validate,parseAmount,decimal,newRecord,recordId} from '../docs/model.mjs';
 function fixture(){const r=newRecord(7);const a=['1000.125','200','300','500','50.025','100','250','800'];Object.keys(r.items).forEach((k,i)=>r.items[k].amount=parseAmount(a[i]));return {version:1,active:r.id,records:[r]};}
 test('synthetic arithmetic preserves all original three decimal places',()=>{assert.deepEqual(totals(fixture().records[0]),{profit:2000125,expense:1200025,net:800100,margin:800100/2000125*100});});
 test('exclude overlapping deferred profit without deleting its amount',()=>{const r=fixture().records[0];r.items.deferred.included=false;assert.equal(totals(r).net,500100);assert.equal(r.items.deferred.amount,300000);});
@@ -8,3 +8,5 @@ test('a zero income month has no fabricated margin and handles losses',()=>{cons
 test('original unknown year and currency stay unknown; restore clones data',()=>{const s=fixture();assert.equal(s.records[0].year,null);assert.equal(s.records[0].currency,'');const copy=validate(s);copy.records[0].items.pos.amount=0;assert.notEqual(copy.records[0].items.pos.amount,s.records[0].items.pos.amount);});
 
 test('new installation starts with zero figures',()=>{const s=seed();validate(s);assert.deepEqual(totals(s.records[0]),{profit:0,expense:0,net:0,margin:null});assert.equal(s.records[0].note,'');});
+
+test('LAN HTTP without randomUUID creates unique valid IDs',()=>{const api={getRandomValues:bytes=>crypto.getRandomValues(bytes)};const ids=new Set();for(let i=0;i<100;i++){const id=recordId(api);assert.match(id,/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);ids.add(id);}assert.equal(ids.size,100);});
