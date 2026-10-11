@@ -1,0 +1,7 @@
+.env
+.env.*
+node_modules/
+backup*.json
+mh-summary*.json
+data/
+.openai/
